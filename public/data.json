@@ -1,0 +1,549 @@
+{
+  "projectName": "AdventureForge Project",
+  "nodes": [
+    {
+      "id": "start",
+      "type": "START",
+      "position": {
+        "x": -648,
+        "y": 2
+      },
+      "data": {
+        "title": "Adventure Start",
+        "events": []
+      },
+      "width": 240,
+      "height": 120,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -648,
+        "y": 2
+      },
+      "dragging": false
+    },
+    {
+      "id": "scene-1",
+      "type": "SCENE",
+      "position": {
+        "x": 52,
+        "y": -36
+      },
+      "data": {
+        "title": "The Moment",
+        "events": [
+          {
+            "type": "NARRATION",
+            "text": "They arrived at the lake just before morning broke. The kind of place where sound feels afraid to exist.\n",
+            "id": "ev-oat33k6kt"
+          },
+          {
+            "type": "NARRATION",
+            "text": "Mist rolled across the water like a slow breath\u2014 not hiding the lake, but softening its truth.\n",
+            "id": "ev-dqx3i4lsq"
+          },
+          {
+            "type": "CHAR_ENTER",
+            "characterId": "aerin",
+            "characterImageId": "5e2wgnn91",
+            "id": "ev-wmf0ifz84"
+          },
+          {
+            "type": "CHAR_ENTER",
+            "characterId": "lyra",
+            "characterImageId": "lyra-full",
+            "x": 70,
+            "id": "ev-5jk587fhj"
+          },
+          {
+            "type": "DIALOGUE",
+            "characterId": "lyra",
+            "text": "Do you ever notice how places like this feel like questions?",
+            "id": "ev-wry572s7q",
+            "voiceAssetId": "audio/voices/voice_scene-1_ev-wry572s7q.mp3"
+          },
+          {
+            "type": "DIALOGUE",
+            "characterId": "aerin",
+            "text": "Or answers we\u2019re not ready to hear.",
+            "id": "ev-q19uqdrsd"
+          }
+        ],
+        "backgroundImage": "Scene/lake.png"
+      },
+      "width": 240,
+      "height": 120,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 52,
+        "y": -36
+      },
+      "dragging": false
+    },
+    {
+      "id": "logic-fork",
+      "type": "LOGIC",
+      "position": {
+        "x": 331.19861649083373,
+        "y": -78.20207526374958
+      },
+      "data": {
+        "title": "The Fork",
+        "events": [
+          {
+            "type": "NARRATION",
+            "text": "The mist thickened. The path around the lake split\u2014 one trail followed the water\u2019s edge, the other climbed into the trees.\n",
+            "id": "ev-zzwyew7ia",
+            "voiceAssetId": "audio/voices/voice_logic-fork_ev-zzwyew7ia.mp3"
+          }
+        ],
+        "choices": [
+          {
+            "id": "ch-1767475837984",
+            "text": "Go to the Tree",
+            "nextNodeId": "scene-b1",
+            "logicRoot": {
+              "id": "root-1767477767935",
+              "type": "STATEMENT",
+              "scope": "GAME",
+              "comparison": ">",
+              "value": 12,
+              "attributeId": "yatz79izs"
+            }
+          },
+          {
+            "id": "ch-1767478961203",
+            "text": "New Option",
+            "nextNodeId": "scene-a1"
+          }
+        ]
+      },
+      "width": 240,
+      "height": 202,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 331.19861649083373,
+        "y": -78.20207526374958
+      }
+    },
+    {
+      "id": "scene-a1",
+      "type": "SCENE",
+      "position": {
+        "x": 664.5802551550257,
+        "y": -201.54161478206277
+      },
+      "data": {
+        "title": "By the Water",
+        "events": [
+          {
+            "type": "NARRATION",
+            "text": "Aerin stayed by the lake. Not out of fear\u2014but out of respect.",
+            "id": "ev-q511kahhp"
+          },
+          {
+            "type": "CHAR_ENTER",
+            "characterId": "aerin",
+            "characterImageId": "5e2wgnn91",
+            "id": "ev-uglp23usi",
+            "x": 38,
+            "y": 82
+          },
+          {
+            "type": "DIALOGUE",
+            "characterId": "aerin",
+            "text": "Some things reveal themselves only when you stop moving.",
+            "id": "ev-7o0vjhkrq",
+            "characterImageId": "19xd58wqy"
+          }
+        ],
+        "backgroundImage": "Scene/lake.png"
+      },
+      "width": 240,
+      "height": 120,
+      "selected": true,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 664.5802551550257,
+        "y": -201.54161478206277
+      }
+    },
+    {
+      "id": "scene-a2",
+      "type": "SCENE",
+      "position": {
+        "x": 1246.1474266188477,
+        "y": -204.8720778456428
+      },
+      "data": {
+        "title": "Understanding",
+        "events": [
+          {
+            "type": "NARRATION",
+            "text": "Shapes emerged slowly. Not visions. Not voices. Patterns.",
+            "id": "ev-qes71xudk"
+          },
+          {
+            "type": "NARRATION",
+            "text": "The way ripples met and canceled each other out. The way branches leaned but did not break.",
+            "id": "ev-9ca7bent3"
+          },
+          {
+            "type": "DIALOGUE",
+            "characterId": "aerin",
+            "text": "Progress wasn\u2019t always forward. Sometimes it was deeper.",
+            "id": "ev-9xbiur7hl"
+          }
+        ],
+        "backgroundImage": "Scene/lake.png"
+      },
+      "width": 240,
+      "height": 120,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1246.1474266188477,
+        "y": -204.8720778456428
+      },
+      "dragging": false
+    },
+    {
+      "id": "scene-b1",
+      "type": "SCENE",
+      "position": {
+        "x": 984,
+        "y": 198
+      },
+      "data": {
+        "title": "Into the Trees",
+        "events": [
+          {
+            "type": "NARRATION",
+            "text": "Lyra took the uphill path. She didn\u2019t look back.",
+            "id": "ev-yc2me2lip"
+          },
+          {
+            "type": "CHAR_ENTER",
+            "characterId": "lyra",
+            "characterImageId": "lyra-side",
+            "id": "ev-jolqfihmo"
+          },
+          {
+            "type": "NARRATION",
+            "text": "Curiosity pulled harder than comfort ever could. The mist thinned as she climbed.",
+            "id": "ev-o6wylve87"
+          }
+        ],
+        "backgroundImage": "Scene/lake.png"
+      },
+      "width": 240,
+      "height": 120,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 984,
+        "y": 198
+      },
+      "dragging": false
+    },
+    {
+      "id": "scene-b2",
+      "type": "SCENE",
+      "position": {
+        "x": 1294,
+        "y": 202
+      },
+      "data": {
+        "title": "Revelation",
+        "events": [
+          {
+            "type": "NARRATION",
+            "text": "From above, she saw the lake fully. Not mysterious. Not infinite.",
+            "id": "ev-6a0ue6aw3"
+          },
+          {
+            "type": "DIALOGUE",
+            "characterId": "lyra",
+            "text": "Just water. Shaped by land, limited by borders. It frees me.",
+            "id": "ev-mhhl2rh19"
+          }
+        ],
+        "backgroundImage": "Scene/lake.png"
+      },
+      "width": 240,
+      "height": 120,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1294,
+        "y": 202
+      },
+      "dragging": false
+    },
+    {
+      "id": "scene-final",
+      "type": "SCENE",
+      "position": {
+        "x": 1672,
+        "y": -8
+      },
+      "data": {
+        "title": "The Choice",
+        "events": [
+          {
+            "type": "NARRATION",
+            "text": "Later, they would argue about which path was right. But the lake knew better.",
+            "id": "ev-domaftmjf"
+          },
+          {
+            "type": "NARRATION",
+            "text": "It had offered neither truth nor illusion. Only a choice.",
+            "id": "ev-u8drr1hqv"
+          },
+          {
+            "type": "NARRATION",
+            "text": "\u201cSome futures ask you to stay. Others ask you to move. Both ask you to be honest.\u201d\n",
+            "id": "ev-e3xsfm8un"
+          }
+        ],
+        "backgroundImage": "Scene/lake.png"
+      },
+      "width": 240,
+      "height": 120,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1672,
+        "y": -8
+      },
+      "dragging": false
+    },
+    {
+      "id": "end",
+      "type": "END",
+      "position": {
+        "x": 1962,
+        "y": -6
+      },
+      "data": {
+        "title": "The End",
+        "events": []
+      },
+      "width": 240,
+      "height": 120,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 1962,
+        "y": -6
+      },
+      "dragging": false
+    },
+    {
+      "id": "setter-1767477527967",
+      "type": "SETTER",
+      "position": {
+        "x": 971.301436664168,
+        "y": -203.18095753088627
+      },
+      "data": {
+        "title": "BY THE WATER SETTER",
+        "events": [
+          {
+            "id": "5foseg7fy",
+            "type": "ATTR_MOD",
+            "attributeTargetId": "yatz79izs",
+            "operation": "ADD",
+            "attributeValue": 10,
+            "attributeFormula": "10"
+          }
+        ],
+        "choices": []
+      },
+      "width": 240,
+      "height": 120,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 971.301436664168,
+        "y": -203.18095753088627
+      }
+    },
+    {
+      "id": "menu-1767486043789",
+      "type": "MENU",
+      "position": {
+        "x": -266,
+        "y": -104.84168172954651
+      },
+      "data": {
+        "title": "New MENU",
+        "events": [],
+        "choices": []
+      },
+      "width": 240,
+      "height": 242,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -266,
+        "y": -104.84168172954651
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-scene-1-logic-fork",
+      "source": "scene-1",
+      "target": "logic-fork",
+      "animated": true
+    },
+    {
+      "id": "e-scene-a2-scene-final",
+      "source": "scene-a2",
+      "target": "scene-final",
+      "animated": true,
+      "selected": false
+    },
+    {
+      "id": "e-scene-b1-scene-b2",
+      "source": "scene-b1",
+      "target": "scene-b2",
+      "animated": true
+    },
+    {
+      "id": "e-scene-b2-scene-final",
+      "source": "scene-b2",
+      "target": "scene-final",
+      "animated": true
+    },
+    {
+      "id": "e-scene-final-end",
+      "source": "scene-final",
+      "target": "end",
+      "animated": true
+    },
+    {
+      "source": "logic-fork",
+      "sourceHandle": "ch-1767475837984",
+      "target": "scene-b1",
+      "targetHandle": null,
+      "animated": true,
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "id": "reactflow__edge-logic-forkch-1767475837984-scene-b1"
+    },
+    {
+      "source": "logic-fork",
+      "sourceHandle": "ch-1767478961203",
+      "target": "scene-a1",
+      "targetHandle": null,
+      "animated": true,
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "id": "reactflow__edge-logic-forkch-1767478961203-scene-a1"
+    },
+    {
+      "source": "setter-1767477527967",
+      "sourceHandle": null,
+      "target": "scene-a2",
+      "targetHandle": null,
+      "animated": true,
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "id": "reactflow__edge-setter-1767477527967-scene-a2"
+    },
+    {
+      "source": "scene-a1",
+      "sourceHandle": null,
+      "target": "setter-1767477527967",
+      "targetHandle": null,
+      "animated": true,
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "id": "reactflow__edge-scene-a1-setter-1767477527967"
+    },
+    {
+      "source": "start",
+      "sourceHandle": null,
+      "target": "menu-1767486043789",
+      "targetHandle": null,
+      "animated": true,
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "id": "reactflow__edge-start-menu-1767486043789"
+    },
+    {
+      "source": "menu-1767486043789",
+      "sourceHandle": "start",
+      "target": "scene-1",
+      "targetHandle": null,
+      "animated": true,
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "id": "reactflow__edge-menu-1767486043789start-scene-1"
+    }
+  ],
+  "characters": [
+    {
+      "id": "aerin",
+      "name": "Aerin",
+      "voice": "Kore",
+      "images": [
+        {
+          "id": "19xd58wqy",
+          "name": "Aerin front",
+          "url": "Character/Aerin/Aerin front.png"
+        },
+        {
+          "id": "5e2wgnn91",
+          "name": "Aerin right",
+          "url": "/Character/Aerin/Aerin right.png?t=1767508485"
+        }
+      ],
+      "description": "Role: Observer, listener, reflective thinker\n\nAppearance: calm eyes, slightly reserved posture\n\nHair: dark, shoulder-length, lightly damp from mist\n\nClothing: long muted coat, simple boots, understated tech accents\n\nVibe: introspective, grounded, human warmth\n"
+    },
+    {
+      "id": "lyra",
+      "name": "Lyra",
+      "voice": "Zephyr",
+      "images": [
+        {
+          "id": "lyra-full",
+          "assetId": "lyra_full",
+          "url": "Character/Lyra/Lyra.png"
+        },
+        {
+          "id": "lyra-side",
+          "assetId": "lyra_side",
+          "url": "Character/Lyra/Lyra 3 side.png"
+        }
+      ],
+      "description": "Role: Questioner, challenger, forward mover\n\nAppearance: alert gaze, subtle tension in her stance\n\nHair: lighter tone, tied back, catching droplets of mist\n\nClothing: fitted jacket, practical yet elegant, faint luminous threads\n\nVibe: decisive, restless, searching\n",
+      "voiceId": "Charon"
+    }
+  ],
+  "audioAssets": [],
+  "gameAttributes": [
+    {
+      "id": "yatz79izs",
+      "key": "gold",
+      "name": "Gold",
+      "initialValue": 7,
+      "visible": false,
+      "type": "GAME"
+    }
+  ],
+  "dialogueStyle": {
+    "boxColor": "#000000",
+    "textColor": "#ffffff",
+    "fontFamily": "Inter, sans-serif",
+    "opacity": 0.8,
+    "yPosition": 5,
+    "height": 30
+  },
+  "narratorVoice": "Fenrir",
+  "version": "1.0",
+  "lastSaved": "2026-01-04T07:05:41.046Z"
+}

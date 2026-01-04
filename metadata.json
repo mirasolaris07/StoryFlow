@@ -1,0 +1,7 @@
+{
+  "name": "AdventureForge: Visual Story Editor",
+  "description": "A powerful node-based editor for creating text adventure games with characters, voice-overs, branching logic, and persistent background music, inspired by ComfyUI and n8n.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

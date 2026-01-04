@@ -1,0 +1,79 @@
+{
+  "name": "adventureforge-visual-story-editor",
+  "private": true,
+  "version": "0.0.0",
+  "main": "electron/dist/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:stack": "concurrently \"python server.py\" \"vite\"",
+    "build": "tsc && vite build",
+    "build:story": "node scripts/build.js",
+    "preview": "vite preview",
+    "// --- Electron Scripts ---": "",
+    "electron:compile": "tsc -p electron/tsconfig.json",
+    "electron:dev": "concurrently \"vite\" \"npm run electron:compile && electron .\"",
+    "electron:check-dev-mode": "powershell -ExecutionPolicy Bypass -File scripts/setup-dev-mode.ps1 -CheckOnly",
+    "preelectron:build": "npm run electron:check-dev-mode",
+    "electron:build": "vite build && npm run electron:compile && electron-builder",
+    "electron:build:player": "cross-env VITE_APP_MODE=player npm run electron:build -- --config electron-builder.player.json",
+    "// --- Capacitor Scripts ---": "",
+    "cap:sync": "vite build && npx cap sync",
+    "cap:android": "npx cap open android",
+    "cap:ios": "npx cap open ios"
+  },
+  "build": {
+    "appId": "com.adventureforge.editor",
+    "productName": "AdventureForge",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/dist/**/*",
+      "electron/package.json",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "mac": {
+      "target": "dmg"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "dependencies": {
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/device": "^8.0.0",
+    "@capacitor/filesystem": "^8.0.0",
+    "@capacitor/preferences": "^8.0.0",
+    "@google/genai": "^1.34.0",
+    "ajv": "^8.17.1",
+    "electron-is-dev": "^3.0.1",
+    "glob": "^13.0.0",
+    "lucide-react": "^0.562.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-draggable": "^4.5.0",
+    "reactflow": "^11.11.4",
+    "yaml": "^2.8.2"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/cli": "^8.0.0",
+    "@capacitor/ios": "^8.0.0",
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "^39.2.7",
+    "electron-builder": "^26.0.12",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0",
+    "wait-on": "^9.0.3"
+  }
+}

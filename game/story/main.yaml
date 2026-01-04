@@ -1,0 +1,168 @@
+# AdventureForge Story Source
+version: "1.0"
+title: "The Path of Staying & Crossing"
+
+assets:
+  backgrounds:
+    lake: "Scene/lake.png"
+  characters:
+    aerin_front: "Character/Aerin/Aerin front.png"
+    aerin_side: "Character/Aerin/Aerin 3 side.png"
+    lyra_full: "Character/Lyra/Lyra.png"
+    lyra_side: "Character/Lyra/Lyra 3 side.png"
+
+characters:
+  - id: aerin
+    name: Aerin
+    voice: Kore
+    images:
+      - id: aerin-front
+        assetId: aerin_front
+      - id: aerin-side
+        assetId: aerin_side
+  
+  - id: lyra
+    name: Lyra
+    voice: Zephyr
+    images:
+      - id: lyra-full
+        assetId: lyra_full
+      - id: lyra-side
+        assetId: lyra_side
+
+startNode: start
+
+nodes:
+  - id: start
+    type: START
+    title: Adventure Start
+    position: {x: 0, y: 0}
+    next: scene-1
+
+  - id: scene-1
+    type: SCENE
+    title: The Moment
+    position: {x: 250, y: 0}
+    background: lake
+    events:
+      - type: NARRATION
+        text: >
+          They arrived at the lake just before morning broke.
+          The kind of place where sound feels afraid to exist.
+      - type: NARRATION
+        text: >
+          Mist rolled across the water like a slow breath—
+          not hiding the lake, but softening its truth.
+      - type: CHAR_ENTER
+        characterId: aerin
+        characterImageId: aerin-front
+      - type: CHAR_ENTER
+        characterId: lyra
+        characterImageId: lyra-full
+        x: 70
+      - type: DIALOGUE
+        characterId: lyra
+        text: "Do you ever notice how places like this feel like questions?"
+      - type: DIALOGUE
+        characterId: aerin
+        text: "Or answers we’re not ready to hear."
+    next: logic-fork
+
+  - id: logic-fork
+    type: LOGIC
+    title: The Fork
+    position: {x: 550, y: 0}
+    events:
+      - type: NARRATION
+        text: >
+          The mist thickened. The path around the lake split—
+          one trail followed the water’s edge, the other climbed into the trees.
+    choices:
+      - text: "Stay by the Water (Aerin)"
+        next: scene-a1
+      - text: "Climb the Path (Lyra)"
+        next: scene-b1
+
+  # Storyline A
+  - id: scene-a1
+    type: SCENE
+    title: By the Water
+    position: {x: 850, y: -200}
+    background: lake
+    events:
+      - type: NARRATION
+        text: "Aerin stayed by the lake. Not out of fear—but out of respect."
+      - type: CHAR_ENTER
+        characterId: aerin
+        characterImageId: aerin-side
+      - type: DIALOGUE
+        characterId: aerin
+        text: "Some things reveal themselves only when you stop moving."
+    next: scene-a2
+
+  - id: scene-a2
+    type: SCENE
+    title: Understanding
+    position: {x: 1150, y: -200}
+    background: lake
+    events:
+      - type: NARRATION
+        text: "Shapes emerged slowly. Not visions. Not voices. Patterns."
+      - type: NARRATION
+        text: "The way ripples met and canceled each other out. The way branches leaned but did not break."
+      - type: DIALOGUE
+        characterId: aerin
+        text: "Progress wasn’t always forward. Sometimes it was deeper."
+    next: scene-final
+
+  # Storyline B
+  - id: scene-b1
+    type: SCENE
+    title: Into the Trees
+    position: {x: 850, y: 200}
+    background: lake
+    events:
+      - type: NARRATION
+        text: "Lyra took the uphill path. She didn’t look back."
+      - type: CHAR_ENTER
+        characterId: lyra
+        characterImageId: lyra-side
+      - type: NARRATION
+        text: "Curiosity pulled harder than comfort ever could. The mist thinned as she climbed."
+    next: scene-b2
+
+  - id: scene-b2
+    type: SCENE
+    title: Revelation
+    position: {x: 1150, y: 200}
+    background: lake
+    events:
+      - type: NARRATION
+        text: "From above, she saw the lake fully. Not mysterious. Not infinite."
+      - type: DIALOGUE
+        characterId: lyra
+        text: "Just water. Shaped by land, limited by borders. It frees me."
+    next: scene-final
+
+  # Conclusion
+  - id: scene-final
+    type: SCENE
+    title: The Choice
+    position: {x: 1500, y: 0}
+    background: lake
+    events:
+      - type: NARRATION
+        text: "Later, they would argue about which path was right. But the lake knew better."
+      - type: NARRATION
+        text: "It had offered neither truth nor illusion. Only a choice."
+      - type: NARRATION
+        text: >
+          “Some futures ask you to stay.
+          Others ask you to move.
+          Both ask you to be honest.”
+    next: end
+
+  - id: end
+    type: END
+    title: The End
+    position: {x: 1800, y: 0}
