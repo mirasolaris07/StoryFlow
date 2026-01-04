@@ -1,34 +1,61 @@
-<div align="center">
-<!-- <img width="800" alt="AdventureForge Banner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" /> -->
+
 [![☕ Buy me a coffee](https://img.shields.io/badge/☕-Buy%20me%20a%20coffee-orange.svg?style=for-the-badge&logo=buy-me-a-coffee)](https://buymeacoffee.com/yuchenghuang)
 
-<h1>AdventureForge: Visual Story Editor</h1>
+<div align="center">
+<img width="800" alt="StoryFlow Interface" src="project_images/main_interface.png" />
+
+
+<h1>StoryFlow: AI-Powered Visual Novel Editor</h1>
+
+**Flow-based Visual Novel Editor with AI-powered voice over, node-based logic, and advanced story development staging.**
+
 </div>
 
-**AdventureForge** is a modern, web-based visual novel engine designed to bridge the gap between simple visual editors (TyranoBuilder) and complex node-based systems (ComfyUI). It enables creators to build interactive stories with a powerful node graph, drag-and-drop scene editing, and a rich dialogue system, then export them as standalone applications.
+---
+
+## 🎥 Visual Demo
+![StoryFlow Demo Video](project_videos/demo_video.mp4)
+
+---
+
+## 🤖 AI-Powered Functions
+StoryFlow integrates modern AI to streamline the creation process:
+- **AI Voice Over (TTS)**: Automatically generate high-quality character voices using the Google TTS / Gemini API integration.
+- **LLM-Driven Branching**: (In Progress) Use LLMs to determine story flow based on user input, creating dynamic, conversational experiences.
+- **Smart Staging**: Automated health checks that identify missing assets or broken paths instantly.
 
 ---
 
 ## ✨ Key Features
 
-### 🛠 Visual Graph Editor
-- **Node-Based Flow**: Organize your story logic with Start, Scene, Logic, and End nodes.
-- **[PLANNED] Super Node**: Group entire Story Branches (e.g., "Route A", "Bad Ending") into a single, namable container to keep your workspace clean.
+### 🛠 Node-Based Flow (The "ComfyUI" Feel)
+- **Logic Nodes**:Expression-based conditions (`gold > 10`) and variable setters for complex branching.
+- **Visual Connectivity**: Organize your story with Start, Scene, Logic, and End nodes.
+- **[NEW] Smart End Logic**: Graceful story conclusions with state reset.
 
-### 🎨 Visual Scene Editor
-- **Drag & Drop Staging**: Place characters directly onto the scene canvas.
-- **Real-Time Preview**: See exactly how your scene looks with the dialogue box overlay.
+### 🎨 Visual Scene Editor (The "TyranoBuilder" Feel)
+- **WYSIWYG Staging**: Drag and drop characters directly onto the scene canvas.
+- **Real-Time Preview**: Instant feedback on text box styling and character placement.
 - **Scale & Flip**: Visual controls to adjust character size and facing.
 
-### 🎭 Advanced Dialogue System
-- **Typewriter Effect**: Text appears character-by-character with natural pauses.
-- **Character Themes**: Different speakers (Narrator, Hero, Villain) have unique text box styles.
-- **Visual Styling**: Customize colors, opacity, fonts, and window dimensions (Width/Height/Position).
-- **Auto-Resizing Text**: The input box grows as you write.
+<div align="center">
+<img width="45%" alt="Scene Editor" src="project_images/scene_editor.png" />
+<img width="45%" alt="Voice Manager" src="project_images/voice_manager_with_tts.png" />
+</div>
 
-### 🚀 Export & Deployment
-- **JSON Project Record**: Save and load your work-in-progress.
-- **Standalone App (.exe)**: Export your finished visual novel as a Windows application.
+### 🎭 Advanced Dialogue System
+- **Character Themes**: Unique text box styles for different speakers.
+- **Visual Styling**: Customize colors, opacity, fonts, and dimensions (Width/Height/Position).
+- **Auto-Pagination**: Algorithmic splitting of long text to fit any container.
+
+---
+
+## 📝 TODO Features (Phase 3 & 4)
+- [ ] **Animation System**: Support for `fade`, `slide`, `shake`, and `dissolve` transitions.
+- [ ] **Super Node (Route Container)**: Collapsible nodes to contain entire story branches (e.g., "Route A").
+- [ ] **Asset Library**: Integrated file browser for easier asset management.
+- [ ] **Dice Roll System**: RPG-style mechanics with visual dice overlays.
+- [ ] **History System**: A scrollable log of previous dialogue.
 
 ---
 
@@ -39,55 +66,18 @@
 - Python 3.10+ (for backend server)
 
 ### 1. Development Mode
-To run the editor locally:
-
 ```bash
 # Install dependencies
 npm install
 
 # Start the Editor and Backend (Concurrent)
 npm run dev:stack
-# OR run them separately:
-# Terminal 1: python server.py
-# Terminal 2: npm run dev
 ```
 
 ### 2. Exporting Your Game
-
-#### A. Export Data (Backup)
-Use the **Export Data** section in the sidebar:
-- **JSON**: Standard project record.
-- **YAML**: Human-readable format.
-- **Script (Ren'Py)**: Linear story script (YAML) for writers.
-
-#### B. Build Standalone Story Player (.exe)
-To export *just the story* for players:
-1.  Click **"Export Story (.exe)"** in the sidebar.
-2.  **Check your Taskbar**: A folder selection window will open.
-3.  Select the destination folder.
-4.  The app will build and save to `[Selected Folder]/AdventureStory_Standalone`.
-
-*Note: The build process automatically cleans the cache to prevent errors.*
-
-#### C. Build Editor App (.exe)
-To build the full editor for yourself:
-```bash
-npm run electron:build
-```
-**Editor App Location:** `release/win-unpacked/AdventureForge.exe`.
-
-#### Build Mobile Apps (Android/iOS)
-```bash
-# Sync web code to native projects
-npm run cap:sync
-
-# Open Android Studio to build APK
-npm run cap:android
-
-# Open Xcode to build iOS App
-npm run cap:ios
-```
-**Mobile Project Locations:** `android/` and `ios/` folders.
+- **Export Story (.exe)**: Build a standalone player for your readers.
+- **Mobile Support**: Export to **Android** and **iOS** via Capacitor.
+- **Developer Mode Check**: Automated pre-build validation for Windows users.
 
 ---
 
