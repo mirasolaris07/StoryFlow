@@ -1,8 +1,8 @@
-
 [![☕ Buy me a coffee](https://img.shields.io/badge/☕-Buy%20me%20a%20coffee-orange.svg?style=for-the-badge&logo=buy-me-a-coffee)](https://buymeacoffee.com/yuchenghuang)
 
 <div align="center">
 <img width="800" alt="StoryFlow Interface" src="project_images/main_interface.png" />
+
 
 
 <h1>StoryFlow: AI-Powered Visual Novel Editor</h1>
@@ -14,14 +14,16 @@
 ---
 
 ## 🎥 Visual Demo
-![StoryFlow Demo Video](project_videos/demo_video.mp4)
+<div align="center">
+  <video src="project_videos/demo_video.mp4" width="100%" controls autoplay muted loop></video>
+</div>
 
 ---
 
 ## 🤖 AI-Powered Functions
 StoryFlow integrates modern AI to streamline the creation process:
 - **AI Voice Over (TTS)**: Automatically generate high-quality character voices using the Google TTS / Gemini API integration.
-- **LLM-Driven Branching**: (In Progress) Use LLMs to determine story flow based on user input, creating dynamic, conversational experiences.
+- **LLM-Driven Branching**: (In Progress) Use LLMs to determine story flow based on user input, creating dynamic experiences.
 - **Smart Staging**: Automated health checks that identify missing assets or broken paths instantly.
 
 ---
@@ -29,9 +31,9 @@ StoryFlow integrates modern AI to streamline the creation process:
 ## ✨ Key Features
 
 ### 🛠 Node-Based Flow (The "ComfyUI" Feel)
-- **Logic Nodes**:Expression-based conditions (`gold > 10`) and variable setters for complex branching.
+- **Logic Nodes**: Expression-based conditions (`gold > 10`) and variable setters.
 - **Visual Connectivity**: Organize your story with Start, Scene, Logic, and End nodes.
-- **[NEW] Smart End Logic**: Graceful story conclusions with state reset.
+- **[NEW] Video Nodes**: Dedicated nodes for full-screen cinematic cutscenes.
 
 ### 🎨 Visual Scene Editor (The "TyranoBuilder" Feel)
 - **WYSIWYG Staging**: Drag and drop characters directly onto the scene canvas.
@@ -43,19 +45,13 @@ StoryFlow integrates modern AI to streamline the creation process:
 <img width="45%" alt="Voice Manager" src="project_images/voice_manager_with_tts.png" />
 </div>
 
-### 🎭 Advanced Dialogue System
-- **Character Themes**: Unique text box styles for different speakers.
-- **Visual Styling**: Customize colors, opacity, fonts, and dimensions (Width/Height/Position).
-- **Auto-Pagination**: Algorithmic splitting of long text to fit any container.
-
 ---
 
 ## 📝 TODO Features (Phase 3 & 4)
 - [ ] **Animation System**: Support for `fade`, `slide`, `shake`, and `dissolve` transitions.
-- [ ] **Super Node (Route Container)**: Collapsible nodes to contain entire story branches (e.g., "Route A").
+- [ ] **Super Node**: Collapsible nodes to contain entire story branches.
 - [ ] **Asset Library**: Integrated file browser for easier asset management.
 - [ ] **Dice Roll System**: RPG-style mechanics with visual dice overlays.
-- [ ] **History System**: A scrollable log of previous dialogue.
 
 ---
 
