@@ -516,17 +516,10 @@ export const GamePreview: React.FC<GamePreviewProps> = ({
     if (!currentEvent || isLogicNode) return;
 
     const timeout = setTimeout(() => {
-      // 1. Handle Voice Synthesis
+      // 1. Handle Voice Playback (Only if explicitly provided as an asset)
       if ((currentEvent.type === EventType.DIALOGUE || currentEvent.type === EventType.NARRATION) && currentEvent.text && currentEvent.visible !== false) {
         if (currentEvent.voiceAssetId) {
           playVoice(currentEvent.text, '', resolveImageUrl(currentEvent.voiceAssetId));
-        } else if (currentEvent.type === EventType.DIALOGUE) {
-          const char = characters.find(c => c.id === currentEvent.characterId);
-          if (char?.voiceId && char.voiceId !== 'None') {
-            playVoice(currentEvent.text, char.voiceId);
-          }
-        } else if (currentEvent.type === EventType.NARRATION) {
-          playVoice(currentEvent.text, narratorVoice);
         }
       }
 

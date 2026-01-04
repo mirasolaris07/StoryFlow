@@ -15,7 +15,7 @@
 
 ## 🎥 Visual Demo
 <div align="center">
-  <video src="project_videos/demo_video.mp4" width="100%" controls autoplay muted loop></video>
+  <img src="project_videos/demo.gif" width="100%" alt="StoryFlow Demo" />
 </div>
 
 ---
