@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { MENU_ITEMS } from '../constants';
 import { NodeType } from '../types';
-import { Play, MessageSquare, Split, Flag, Box, Lock, Sliders, LayoutTemplate, Loader2, Edit3, Terminal as TerminalIcon, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { MessageSquare, Users, Terminal, Music, FolderOpen, Box, Folder, Play, Download, Zap, X, Plus, Info, LayoutTemplate, Sliders, Flag, Split, Loader2, Edit3, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -14,22 +13,37 @@ interface SidebarProps {
   onProjectNameChange?: (name: string) => void;
   logs?: string[];
   onClearLogs?: () => void;
+  activeSecondarySidebar: 'library' | 'publish' | null;
+  onToggleSecondarySidebar: (type: 'library' | 'publish') => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onExport, onBuild, isBuilding, projectName, onProjectNameChange, logs = [], onClearLogs }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  activeTab,
+  setActiveTab,
+  onExport,
+  onBuild,
+  isBuilding,
+  projectName,
+  onProjectNameChange,
+  logs = [],
+  onClearLogs,
+  activeSecondarySidebar,
+  onToggleSecondarySidebar
+}) => {
   const [isConsoleCollapsed, setIsConsoleCollapsed] = React.useState(false);
-  console.log("Sidebar: isBuilding =", isBuilding);
+
   const onDragStart = (event: React.DragEvent, nodeType: NodeType) => {
     event.dataTransfer.setData('application/reactflow', nodeType);
     event.dataTransfer.effectAllowed = 'move';
   };
 
   return (
-    <div className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col h-full select-none">
-      <div className="p-6 border-b border-slate-800 space-y-3">
-        <div className="flex flex-col gap-1">
+    <div className="w-72 bg-slate-900 border-r border-slate-800 flex flex-col h-full select-none shadow-2xl z-[20] relative">
+      {/* Header section with breathing room */}
+      <div className="p-8 pb-6 border-b border-slate-800/50">
+        <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-black bg-gradient-to-br from-blue-400 via-indigo-400 to-emerald-400 bg-clip-text text-transparent tracking-tight">
               AdventureForge
             </h1>
             <button
@@ -37,222 +51,104 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onExp
                 const newName = prompt("Rename Project:", projectName);
                 if (newName) onProjectNameChange?.(newName);
               }}
-              className="p-1.5 text-slate-500 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg transition-all"
-              title="Rename Project"
+              className="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-400/10 rounded-xl transition-all"
             >
-              <Edit3 size={14} />
+              <Edit3 size={15} />
             </button>
           </div>
-          <div className="text-[10px] text-slate-400 font-medium px-1 flex items-center gap-2">
-            <span className="truncate max-w-[140px]" title={projectName}>{projectName || 'Untitled Project'}</span>
+          <div className="flex items-center gap-2 px-1">
+            <span className="text-[10px] font-bold text-slate-400 truncate max-w-[120px] uppercase tracking-wider">{projectName || 'UNTITLED'}</span>
             <span className="w-1 h-1 bg-slate-700 rounded-full" />
-            <span className="text-slate-600">v1.0</span>
+            <span className="text-[10px] font-medium text-slate-600">v1.0.4</span>
           </div>
         </div>
       </div>
 
-      <nav className="p-4 space-y-1">
-        {MENU_ITEMS.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setActiveTab(item.id)}
-            className={`w-full flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200 ${activeTab === item.id
-              ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30'
-              : 'text-slate-500 hover:bg-slate-800 hover:text-slate-300'
-              }`}
-          >
-            {item.icon}
-            <span className="text-sm font-medium">{item.label}</span>
-          </button>
-        ))}
+      {/* Navigation with explicit indicators */}
+      <nav className="p-4 pt-6 space-y-1.5 flex-1 overflow-y-auto custom-scrollbar">
+        <div className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em] px-4 mb-3">Project Views</div>
+        {MENU_ITEMS.map((item) => {
+          const isActive = activeTab === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              className={`w-full flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300 relative group overflow-hidden ${isActive
+                ? 'bg-blue-600/10 text-blue-400 shadow-[inset_0_0_20px_rgba(37,99,235,0.05)]'
+                : 'text-slate-500 hover:bg-slate-800/50 hover:text-slate-300'
+                }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-xl transition-all ${activeTab === item.id ? 'bg-blue-500 shadow-lg shadow-blue-900/40 text-white' : 'bg-slate-800 text-slate-500 group-hover:text-slate-300'}`}>
+                  {item.id === 'attributes' ? <Terminal size={18} /> : item.icon}
+                </div>
+              </div>
+              <span className={`text-[13px] font-bold tracking-wide transition-all ${isActive ? 'translate-x-0' : 'group-hover:translate-x-0.5'}`}>
+                {item.label}
+              </span>
+              {isActive && (
+                <div className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-blue-500 rounded-r-full shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+              )}
+            </button>
+          );
+        })}
       </nav>
 
-      <div className="flex-1 p-4 space-y-6 overflow-y-auto">
-        <div>
-          <h3 className="text-[10px] uppercase font-bold text-slate-600 tracking-widest mb-4 flex items-center gap-2">
-            <Box size={12} />
-            Node Library
-          </h3>
-          <div className="space-y-3">
-            <div
-              className="group flex items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-xl cursor-grab active:cursor-grabbing hover:border-emerald-500/50 hover:bg-slate-800 transition-all"
-              onDragStart={(event) => onDragStart(event, NodeType.START)}
-              draggable
-            >
-              <div className="p-2 bg-emerald-500/20 rounded-lg text-emerald-500 group-hover:scale-110 transition-transform">
-                <Play size={16} />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-slate-200">Start Node</div>
-                <div className="text-[10px] text-slate-500 uppercase">Entry Point</div>
-              </div>
-            </div>
-
-            <div
-              className="group flex items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-xl cursor-grab active:cursor-grabbing hover:border-blue-500/50 hover:bg-slate-800 transition-all"
-              onDragStart={(event) => onDragStart(event, NodeType.SCENE)}
-              draggable
-            >
-              <div className="p-2 bg-blue-500/20 rounded-lg text-blue-500 group-hover:scale-110 transition-transform">
-                <MessageSquare size={16} />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-slate-200">Scene Node</div>
-                <div className="text-[10px] text-slate-500 uppercase">Narrative</div>
-              </div>
-            </div>
-
-            <div
-              className="group flex items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-xl cursor-grab active:cursor-grabbing hover:border-amber-500/50 hover:bg-slate-800 transition-all"
-              onDragStart={(event) => onDragStart(event, NodeType.LOGIC)}
-              draggable
-            >
-              <div className="p-2 bg-amber-500/20 rounded-lg text-amber-500 group-hover:scale-110 transition-transform">
-                <Split size={16} />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-slate-200">Logic Node</div>
-                <div className="text-[10px] text-slate-500 uppercase">Branching</div>
-              </div>
-            </div>
-
-            <div
-              className="group flex items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-xl cursor-grab active:cursor-grabbing hover:border-cyan-500/50 hover:bg-slate-800 transition-all"
-              onDragStart={(event) => onDragStart(event, NodeType.SETTER)}
-              draggable
-            >
-              <div className="p-2 bg-cyan-500/20 rounded-lg text-cyan-500 group-hover:scale-110 transition-transform">
-                <Sliders size={16} />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-slate-200">Setter Node</div>
-                <div className="text-[10px] text-slate-500 uppercase">Variables</div>
-              </div>
-            </div>
-
-            <div
-              className="group flex items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-xl cursor-grab active:cursor-grabbing hover:border-indigo-500/50 hover:bg-slate-800 transition-all"
-              onDragStart={(event) => onDragStart(event, NodeType.MENU)}
-              draggable
-            >
-              <div className="p-2 bg-indigo-500/20 rounded-lg text-indigo-500 group-hover:scale-110 transition-transform">
-                <LayoutTemplate size={16} />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-slate-200">Main Menu</div>
-                <div className="text-[10px] text-slate-500 uppercase">Start Screen</div>
-              </div>
-            </div>
-
-            <div
-              className="group flex items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-xl cursor-grab active:cursor-grabbing hover:border-rose-500/50 hover:bg-slate-800 transition-all"
-              onDragStart={(event) => onDragStart(event, NodeType.END)}
-              draggable
-            >
-              <div className="p-2 bg-rose-500/20 rounded-lg text-rose-500 group-hover:scale-110 transition-transform">
-                <Flag size={16} />
-              </div>
-              <div>
-                <div className="text-xs font-bold text-slate-200">End Node</div>
-                <div className="text-[10px] text-slate-500 uppercase">Conclusion</div>
-              </div>
-            </div>
-          </div>
-          <p className="mt-4 text-[10px] text-slate-600 italic px-2">
-            Drag nodes onto the canvas to build your story.
-          </p>
-        </div>
-      </div>
-
-      <div className="p-4 border-t border-slate-800 space-y-2">
-        <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest pl-1 mb-1">Export Data</div>
-        <div className="grid grid-cols-2 gap-2">
-          <button onClick={() => onExport && onExport('json')} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl border border-slate-700 transition-colors text-[10px] font-bold">
-            JSON
+      {/* Bottom Toggles for Flyouts */}
+      <div className="p-4 border-t border-slate-800/50 bg-slate-900/50 backdrop-blur-md">
+        <div className="flex gap-2">
+          <button
+            onClick={() => onToggleSecondarySidebar('library')}
+            className={`flex-1 flex flex-col items-center justify-center gap-1.5 py-3 rounded-2xl transition-all border ${activeSecondarySidebar === 'library'
+              ? 'bg-blue-600/20 border-blue-500/50 text-blue-400 shadow-lg shadow-blue-900/20'
+              : 'bg-slate-800/50 border-slate-700 text-slate-500 hover:text-slate-300 hover:bg-slate-800'
+              }`}
+          >
+            <Box size={18} />
+            <span className="text-[10px] font-black tracking-widest uppercase">Library</span>
           </button>
-          <button onClick={() => onExport && onExport('yaml')} className="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-200 py-2.5 rounded-xl border border-slate-700 transition-colors text-[10px] font-bold">
-            YAML
+
+          <button
+            onClick={() => onToggleSecondarySidebar('publish')}
+            className={`flex-1 flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl transition-all border ${activeSecondarySidebar === 'publish'
+              ? 'bg-slate-800 text-white border-slate-700 shadow-xl'
+              : 'text-slate-500 border-transparent hover:bg-slate-900/50 hover:text-slate-300'
+              }`}
+          >
+            <Folder size={18} />
+            <span className="text-[10px] font-black tracking-widest uppercase">Project</span>
           </button>
         </div>
-        <button onClick={() => onExport && onExport('storyline_yaml')} className="w-full flex items-center justify-center gap-2 bg-indigo-900/20 hover:bg-indigo-600 hover:text-white text-indigo-400 py-2.5 rounded-xl border border-indigo-500/20 transition-colors text-xs font-bold">
-          Export Script
-        </button>
-        <button onClick={() => onExport && onExport('storyline_md')} className="w-full flex items-center justify-center gap-2 bg-pink-900/20 hover:bg-pink-600 hover:text-white text-pink-400 py-2.5 rounded-xl border border-pink-500/20 transition-colors text-xs font-bold mt-2">
-          <Lock size={12} className="opacity-50" /> Export Visual Script (.md)
-        </button>
-      </div>
-
-      <div className="p-4 pt-0 border-t border-transparent space-y-2">
-        <div className="flex justify-between items-center pl-1 mb-1">
-          <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Build Application</div>
-          {isBuilding && <span className="text-[8px] text-emerald-500 font-bold animate-pulse">BUILDING_ACTIVE</span>}
-        </div>
-        <button
-          onClick={async () => {
-            if (isBuilding) return;
-            if (onBuild) {
-              await onBuild();
-            } else {
-              alert("Build system not linked.");
-            }
-          }}
-          disabled={isBuilding}
-          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border transition-all text-xs font-bold ${isBuilding
-            ? 'bg-slate-800 text-slate-500 border-slate-700 cursor-not-allowed'
-            : 'bg-emerald-900/20 hover:bg-emerald-600 hover:text-white text-emerald-400 border-emerald-500/20'
-            }`}
-        >
-          {isBuilding ? (
-            <>
-              <Loader2 size={14} className="animate-spin" />
-              <span>Building Story...</span>
-            </>
-          ) : (
-            <span>Export Story (.exe)</span>
-          )}
-        </button>
-        <button
-          onClick={() => alert("Mobile Export (iOS/Android):\nRequires Capacitor/Cordova setup.\n\nGuide: npx cap add android\n(See Publishing Guide)")}
-          className="w-full flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-400 py-2.5 rounded-xl border border-slate-700 transition-colors text-xs font-bold"
-        >
-          <Lock size={12} className="opacity-50" /> iOS / Android
-        </button>
       </div>
 
       {/* Build Console */}
       {(logs.length > 0 || isBuilding) && (
-        <div className={`absolute bottom-0 left-0 right-0 bg-slate-950 border-t border-slate-800 flex flex-col z-[50] transition-all duration-300 shadow-2xl ${isConsoleCollapsed ? 'h-10' : 'max-h-[40%] h-auto'}`}>
-          <div className="flex items-center justify-between px-4 py-2 bg-slate-900 border-b border-slate-800 cursor-pointer" onClick={() => setIsConsoleCollapsed(!isConsoleCollapsed)}>
-            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
-              <TerminalIcon size={12} />
-              <span>BUILD CONSOLE</span>
-              {isBuilding && <Loader2 size={10} className="animate-spin text-emerald-500" />}
+        <div className={`absolute bottom-28 left-6 right-6 bg-slate-950/95 backdrop-blur-xl border border-slate-800/50 flex flex-col z-[50] transition-all duration-500 shadow-2xl rounded-3xl overflow-hidden ${isConsoleCollapsed ? 'h-12' : 'max-h-[50%] h-auto'}`}>
+          <div className="flex items-center justify-between px-5 py-3.5 bg-slate-900/80 cursor-pointer hover:bg-slate-900/50 transition-colors" onClick={() => setIsConsoleCollapsed(!isConsoleCollapsed)}>
+            <div className="flex items-center gap-3 text-[10px] font-black text-slate-400 tracking-[0.1em]">
+              <Terminal size={14} className={isBuilding ? "text-emerald-500" : "text-blue-500"} />
+              <span>TERMINAL</span>
+              {isBuilding && <Loader2 size={12} className="animate-spin text-emerald-500" />}
             </div>
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
               <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onClearLogs?.();
-                }}
-                className="p-1 hover:bg-slate-800 rounded transition-colors"
-                title="Clear Logs"
+                onClick={(e) => { e.stopPropagation(); onClearLogs?.(); }}
+                className="p-1.5 hover:bg-slate-800 rounded-lg transition-colors group"
+                title="Clear logs"
               >
-                <X size={12} className="text-slate-500" />
+                <X size={14} className="text-slate-500 group-hover:text-rose-400" />
               </button>
-              <button
-                className="p-1 hover:bg-slate-800 rounded transition-colors"
-              >
-                {isConsoleCollapsed ? <ChevronUp size={14} className="text-slate-400" /> : <ChevronDown size={14} className="text-slate-400" />}
-              </button>
+              <div className="w-px h-4 bg-slate-800 mx-1" />
+              {isConsoleCollapsed ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
             </div>
           </div>
           {!isConsoleCollapsed && (
-            <div className="flex-1 overflow-y-auto p-3 font-mono text-[10px] space-y-1 selection:bg-blue-500/30 select-text bg-black/40">
+            <div className="flex-1 overflow-y-auto p-5 font-mono text-[10px] space-y-1.5 bg-black/50 custom-scrollbar selection:bg-blue-500/20">
               {logs.map((log, i) => {
                 const isErr = log.startsWith('ERR:');
                 const isStatus = log.startsWith('STATUS:');
                 return (
-                  <div key={i} className={`whitespace-pre-wrap select-text cursor-text ${isErr ? 'text-rose-400' : isStatus ? 'text-emerald-400 font-bold' : 'text-slate-400'}`}>
+                  <div key={i} className={`whitespace-pre-wrap ${isErr ? 'text-rose-400' : isStatus ? 'text-emerald-400 font-bold' : 'text-slate-400 opacity-80'}`}>
                     {log}
                   </div>
                 );

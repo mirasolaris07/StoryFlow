@@ -660,7 +660,12 @@ export const GamePreview: React.FC<GamePreviewProps> = ({
           </div>
         )}
 
-        <div className="absolute inset-0 z-0 bg-slate-900" onClick={() => !isLogicNode && nextEvent()}>
+        {/* Stage Area (16:9) */}
+        <div
+          className="relative aspect-video max-w-full max-h-full mx-auto self-center bg-slate-900 shadow-2xl overflow-hidden"
+          style={{ width: '100%' }}
+          onClick={() => !isLogicNode && nextEvent()}
+        >
           <img
             src={bgSrc}
             className="w-full h-full object-cover transition-opacity duration-1000"
@@ -677,15 +682,19 @@ export const GamePreview: React.FC<GamePreviewProps> = ({
               className="absolute transition-all duration-700 ease-out pointer-events-none"
               style={{
                 left: `${currentEvent?.x ?? 50}%`,
-                top: `${currentEvent?.y ?? 55}%`,
-                transform: 'translate(-50%, -50%)',
+                top: `${currentEvent?.y ?? 100}%`,
+                width: '30%', // Matching Editor width
+                transform: 'translate(-50%, -100%)',
                 zIndex: 20
               }}
             >
               <div className="relative group">
                 <img
                   src={charSrc}
-                  className="h-[80vh] w-auto max-w-[90vw] object-contain drop-shadow-[0_0_80px_rgba(0,0,0,0.6)]"
+                  className="w-full h-auto object-contain drop-shadow-[0_0_80px_rgba(0,0,0,0.6)]"
+                  style={{
+                    transform: `scale(${currentEvent?.scale || 1}) scaleX(${currentEvent?.flip ? -1 : 1})`,
+                  }}
                   alt={currentChar?.name}
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;

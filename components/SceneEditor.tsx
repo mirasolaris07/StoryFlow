@@ -25,12 +25,36 @@ const DraggableCharacterLarge: React.FC<DraggableCharacterLargeProps> = ({
     const nodeRef = useRef<HTMLDivElement>(null);
     const initialX = event.x ?? 50;
     const initialY = event.y ?? 100;
+    const initialScale = event.scale || 1;
+
+    // Local state for temporary drag feedback if needed, but we'll stick to direct updates for simplicity
+    const handleResize = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+
+        const startX = e.clientX;
+        const startScale = initialScale;
+
+        const onMouseMove = (moveEvent: MouseEvent) => {
+            const deltaX = moveEvent.clientX - startX;
+            // Adjust scale based on horizontal movement (right = bigger)
+            const newScale = Math.max(0.1, Math.min(5, startScale + (deltaX / 200)));
+            onUpdate(event.id, { scale: Math.round(newScale * 100) / 100 });
+        };
+
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+        };
+
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    };
 
     return (
         <Draggable
             nodeRef={nodeRef}
             axis="both"
-            // bounds="parent" - Removed to allow dragging off-stage or to exact edges without constraint issues
             position={{ x: 0, y: 0 }}
             onStop={(e, d) => {
                 if (!nodeRef.current || !nodeRef.current.parentElement) return;
@@ -38,40 +62,55 @@ const DraggableCharacterLarge: React.FC<DraggableCharacterLargeProps> = ({
                 const width = parent.offsetWidth;
                 const height = parent.offsetHeight;
 
-                // New absolute pixel position matches the drag result
                 const currentXpx = (initialX / 100 * width) + d.x;
                 const currentYpx = (initialY / 100 * height) + d.y;
 
-                const newX = Math.round((currentXpx / width) * 100);
-                const newY = Math.round((currentYpx / height) * 100);
+                const newX = Math.round((currentXpx / width) * 1000) / 10;
+                const newY = Math.round((currentYpx / height) * 1000) / 10;
 
                 onUpdate(event.id, { x: newX, y: newY });
             }}
         >
             <div
                 ref={nodeRef}
-                className="absolute w-64 cursor-move transition-transform active:scale-105 hover:z-10 group" // Larger width (w-64) for big screen
+                className="absolute cursor-move active:scale-[1.02] hover:z-20 group"
                 style={{
                     left: `${initialX}%`,
                     top: `${initialY}%`,
+                    width: '30%', // Base width of the character container
+                    zIndex: event.visible === false ? 0 : 10
                 }}
             >
                 <div
-                    className="w-full relative"
+                    className="w-full relative origin-bottom"
                     style={{
-                        transform: `translate(-50%, -100%) scale(${event.scale || 1}) scaleX(${event.flip ? -1 : 1})`,
+                        transform: `translate(-50%, -100%) scale(${initialScale}) scaleX(${event.flip ? -1 : 1})`,
                     }}
                 >
                     <img
                         src={imgSrc}
                         alt="char"
-                        className="w-full h-auto drop-shadow-2xl pointer-events-none select-none"
+                        className="w-full h-auto drop-shadow-2xl pointer-events-none select-none transition-shadow group-hover:drop-shadow-[0_0_20px_rgba(255,255,255,0.3)]"
                     />
 
-                    {/* Hover Info */}
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity">
-                        x: {initialX}% y: {initialY}%
+                    {/* Resize Handle (Bottom-Right) */}
+                    <div
+                        onMouseDown={handleResize}
+                        className="absolute bottom-0 right-0 w-6 h-6 bg-blue-500 rounded-full border-4 border-slate-900 cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center shadow-xl z-30"
+                        title="Drag to resize"
+                    >
+                        <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
                     </div>
+
+                    {/* Hover Info & Controls */}
+                    <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-md text-white text-[10px] px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-all border border-white/10 flex items-center gap-3 shadow-2xl">
+                        <span className="font-black text-blue-400">POS:</span> {initialX}% , {initialY}%
+                        <span className="w-px h-3 bg-white/20" />
+                        <span className="font-black text-amber-400">SCALE:</span> {Math.round(initialScale * 100)}%
+                    </div>
+
+                    {/* Selection Border */}
+                    <div className="absolute inset-0 border-2 border-blue-500/50 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                 </div>
             </div>
         </Draggable>

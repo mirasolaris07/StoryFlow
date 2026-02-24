@@ -3,7 +3,8 @@ import { Node } from 'reactflow';
 import { Character, SceneEvent, EventType, NodeData } from '../types';
 import { synthesizeVoice } from '../services/geminiService';
 import { uploadAsset } from '../services/api';
-import { Play, Mic, CheckCircle, AlertCircle, Loader2, X, RefreshCw, Filter, Music, Upload, Square, Circle, Trash2 } from 'lucide-react';
+import { Play, Mic, CheckCircle, AlertCircle, Loader2, X, RefreshCw, Filter, Music, Upload, Square, Circle, Trash2, Maximize2, Minimize2, GripHorizontal } from 'lucide-react';
+import Draggable from 'react-draggable';
 
 interface VoiceManagerProps {
     nodes: Node[];
@@ -12,6 +13,7 @@ interface VoiceManagerProps {
     onUpdateNarratorVoice: (voice: string) => void;
     onUpdateCharacter: (id: string, updates: Partial<Character>) => void;
     onUpdateNode: (id: string, data: Partial<NodeData>) => void;
+    onJumpToLine?: (nodeId: string, eventId: string) => void;
     onClose: () => void;
 }
 
@@ -26,12 +28,15 @@ interface VoiceLine {
     url?: string;
 }
 
-export const VoiceManager: React.FC<VoiceManagerProps> = ({ nodes, characters, narratorVoice, onUpdateNarratorVoice, onUpdateCharacter, onUpdateNode, onClose }) => {
+export const VoiceManager: React.FC<VoiceManagerProps> = ({ nodes, characters, narratorVoice, onUpdateNarratorVoice, onUpdateCharacter, onUpdateNode, onJumpToLine, onClose }) => {
     const [lines, setLines] = useState<VoiceLine[]>([]);
     const [filter, setFilter] = useState<'all' | 'missing' | 'generated'>('all');
     const [isProcessing, setIsProcessing] = useState(false);
     const [progress, setProgress] = useState(0);
     const [recordingLineId, setRecordingLineId] = useState<string | null>(null);
+    const [viewMode, setViewMode] = useState<'full' | 'mini'>('full');
+    const [activeLineId, setActiveLineId] = useState<string | null>(null);
+    const nodeRef = useRef<HTMLDivElement>(null);
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
     const [previewAudio, setPreviewAudio] = useState<HTMLAudioElement | null>(null);
@@ -281,6 +286,75 @@ export const VoiceManager: React.FC<VoiceManagerProps> = ({ nodes, characters, n
         return true;
     });
 
+    const currentLine = lines.find(l => l.eventId === activeLineId);
+
+    if (viewMode === 'mini' && currentLine) {
+        return (
+            <Draggable nodeRef={nodeRef} cancel="button, .no-drag">
+                <div
+                    ref={nodeRef}
+                    className="fixed top-10 left-1/2 -translate-x-1/2 z-[200] w-[500px] bg-slate-900 border border-slate-700/50 rounded-3xl shadow-[0_40px_100px_rgba(0,0,0,0.8)] p-5 animate-in slide-in-from-top duration-500 overflow-hidden ring-1 ring-white/10 cursor-grab active:cursor-grabbing"
+                    onDoubleClick={() => setViewMode('full')}
+                >
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-blue-600" />
+
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                            <GripHorizontal size={16} className="text-slate-500" />
+                            <div className="bg-blue-600 p-1.5 rounded-lg">
+                                <Mic size={14} className="text-white" />
+                            </div>
+                            <span className="text-[10px] font-black text-white uppercase tracking-widest">{currentLine.characterName}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <button onClick={() => setViewMode('full')} className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-white transition-all" title="Enlarge">
+                                <Maximize2 size={14} />
+                            </button>
+                            <button onClick={onClose} className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-500 hover:text-white transition-all">
+                                <X size={14} />
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-950/80 rounded-xl p-3 mb-4 border border-slate-800">
+                        <p className="text-[11px] text-slate-400 italic font-medium leading-tight line-clamp-2">"{currentLine.text}"</p>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                            {currentLine.status === 'generated' && <CheckCircle size={14} className="text-emerald-500" />}
+                            {currentLine.status === 'processing' && <Loader2 size={14} className="text-blue-500 animate-spin" />}
+                            <span className="text-[8px] font-black uppercase text-slate-500">{currentLine.status}</span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                onClick={() => generateVoiceForLine(currentLine)}
+                                className="p-2.5 bg-slate-800 hover:bg-blue-600 text-slate-400 hover:text-white rounded-xl transition-all active:scale-95"
+                            >
+                                <RefreshCw size={14} />
+                            </button>
+                            <button
+                                onClick={() => recordingLineId === currentLine.eventId ? stopRecording() : startRecording(currentLine)}
+                                className={`p-2.5 rounded-xl transition-all active:scale-95 ${recordingLineId === currentLine.eventId ? 'bg-rose-600 text-white animate-pulse' : 'bg-slate-800 hover:bg-rose-600 text-slate-400 hover:text-white'}`}
+                            >
+                                {recordingLineId === currentLine.eventId ? <Square size={14} /> : <Circle size={14} />}
+                            </button>
+                            {currentLine.url && (
+                                <button
+                                    onClick={() => playPreview(currentLine.url!)}
+                                    className="p-2.5 bg-slate-800 hover:bg-amber-600 text-slate-400 hover:text-white rounded-xl transition-all active:scale-95"
+                                >
+                                    <Play size={14} />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </Draggable>
+        );
+    }
+
     return (
         <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-md p-10 animate-in fade-in duration-300">
             <div className="w-full max-w-6xl h-4/5 bg-slate-900 border border-slate-700 rounded-[40px] shadow-2xl flex flex-col overflow-hidden">
@@ -382,7 +456,15 @@ export const VoiceManager: React.FC<VoiceManagerProps> = ({ nodes, characters, n
                 <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
                     <div className="grid gap-4">
                         {filteredLines.map(line => (
-                            <div key={`${line.nodeId}-${line.eventId}`} className="group bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 rounded-2xl p-6 transition-all flex flex-col gap-4">
+                            <div
+                                key={`${line.nodeId}-${line.eventId}`}
+                                className="group bg-slate-800/40 hover:bg-slate-800 border border-slate-700/50 rounded-2xl p-6 transition-all flex flex-col gap-4 cursor-pointer active:scale-[0.99]"
+                                onClick={() => {
+                                    onJumpToLine?.(line.nodeId, line.eventId);
+                                    setActiveLineId(line.eventId);
+                                    setViewMode('mini');
+                                }}
+                            >
                                 <div className="flex items-center justify-between">
                                     <div className="flex gap-8">
                                         <div className="w-24">

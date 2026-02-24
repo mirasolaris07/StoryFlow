@@ -30,53 +30,46 @@ const DraggableCharacter: React.FC<DraggableCharacterProps> = ({
         <Draggable
             nodeRef={nodeRef}
             axis="both"
-            // bounds="parent" - Removed to allow full freedom
-            position={{ x: 0, y: 0 }} // Controlled by CSS left/top mostly, but we need to reset Draggable's internal tracking on stop
+            position={{ x: 0, y: 0 }}
             onStop={(e, d) => {
-                // We need to calculate the % based on the parent
                 if (!nodeRef.current || !nodeRef.current.parentElement) return;
                 const parent = nodeRef.current.parentElement;
                 const width = parent.offsetWidth;
                 const height = parent.offsetHeight;
 
-                // New absolute pixel position matches the drag result
-                // But wait, Draggable uses translate.
-                // We want to update the LEFT/TOP % props.
-
-                // Our 'left' is initialX%. Draggable adds 'd.x' (pixels).
-                // Final X (px) = (initialX% * width) + d.x
+                // Current absolute pixel position
                 const currentXpx = (initialX / 100 * width) + d.x;
                 const currentYpx = (initialY / 100 * height) + d.y;
 
-                const newX = Math.round((currentXpx / width) * 100);
-                const newY = Math.round((currentYpx / height) * 100);
+                // Precision percentage
+                const newX = Math.round((currentXpx / width) * 1000) / 10;
+                const newY = Math.round((currentYpx / height) * 1000) / 10;
 
                 onUpdate(event.id, { x: newX, y: newY });
             }}
         >
             <div
                 ref={nodeRef}
-                className="absolute w-48 cursor-move transition-transform active:scale-105 hover:z-10"
+                className="absolute cursor-move active:scale-[1.02] hover:z-10 group"
                 style={{
                     left: `${initialX}%`,
                     top: `${initialY}%`,
-                    // We apply the anchor transform here. Draggable will append its own translate() to this style prop.
+                    width: '30%', // Matching Editor/Player
                 }}
             >
                 <div
                     className="w-full relative"
                     style={{
-                        // Apply the anchor transform inner, so Draggable moves the 'origin' point
                         transform: `translate(-50%, -100%) scale(${event.scale || 1}) scaleX(${event.flip ? -1 : 1})`,
                     }}
                 >
                     <img
                         src={imgSrc}
                         alt="char"
-                        className="w-full h-auto drop-shadow-2xl pointer-events-none"
+                        className="w-full h-auto drop-shadow-2xl pointer-events-none select-none"
                     />
-                    <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/50 text-white text-[9px] px-2 py-0.5 rounded opacity-0 hover:opacity-100 whitespace-nowrap pointer-events-none">
-                        x: {initialX}% y: {initialY}%
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900/90 backdrop-blur-sm text-white text-[9px] px-2 py-0.5 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none transition-opacity border border-white/10">
+                        {initialX}% , {initialY}%
                     </div>
                 </div>
             </div>
@@ -101,15 +94,15 @@ export const StagePreview: React.FC<StagePreviewProps> = ({ data, characters, on
     return (
         <div
             ref={containerRef}
-            className="w-full aspect-video bg-black relative overflow-hidden rounded-lg border border-slate-700 select-none group"
+            className="w-full aspect-video bg-black relative overflow-hidden rounded-lg border border-slate-700 select-none group flex items-center justify-center"
             style={{
                 backgroundImage: `url(${resolveImageUrl(data.backgroundImage)})`,
-                backgroundSize: data.backgroundScaling === 'FIXED' ? 'contain' : 'cover',
+                backgroundSize: 'cover', // Mini-preview always uses cover for filled look
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat'
             }}
         >
-            <div className="absolute inset-0 pointer-events-none opacity-20 border-2 border-dashed border-white/50 m-4 rounded group-hover:opacity-40 transition-opacity" />
+            <div className="absolute inset-0 pointer-events-none opacity-10 border-2 border-dashed border-white/50 m-2 rounded group-hover:opacity-30 transition-opacity" />
 
             {charEvents.map(event => {
                 const imgSrc = resolveImageUrl(getCharImage(event.characterId, event.characterImageId));

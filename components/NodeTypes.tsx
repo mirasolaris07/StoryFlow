@@ -1,8 +1,9 @@
 
 import React, { memo } from 'react';
 import { Handle, Position } from 'reactflow';
-import { NodeData, NodeType, Character, AudioAsset } from '../types';
+import { NodeData, NodeType, Character, AudioAsset, EventType } from '../types';
 import { resolveImageUrl } from './GamePreview';
+import { StagePreview } from './StagePreview';
 import { Play, MessageSquare, Split, Flag, AlertTriangle, ChevronRight, ChevronDown, Plus, Sliders, LayoutTemplate, Mic } from 'lucide-react';
 
 const BaseNode = ({ children, title, icon: Icon, colorClass, type, selected, isError, errors }: any) => (
@@ -105,12 +106,15 @@ export const SceneNode = memo(({ data, selected }: any) => {
   const hasVoices = data.events?.some((e: any) => e.voiceAssetId);
   return (
     <BaseNode title={data.title || "New Scene"} icon={MessageSquare} colorClass="border-blue-500" type="SCENE" selected={selected} isError={isError} errors={errors}>
-      {/* Optional Background Preview */}
-      {data.backgroundImage && (
-        <div className="absolute inset-0 z-0 opacity-20 pointer-events-none">
-          <img src={resolveImageUrl(data.backgroundImage)} className="w-full h-full object-cover" alt="" />
-        </div>
-      )}
+      {/* Scene Preview Stage */}
+      <div className="mb-4 -mx-4 -mt-4 border-b border-slate-800 pointer-events-none relative overflow-hidden group/stage">
+        <StagePreview
+          data={data}
+          characters={characters}
+          onUpdateEvent={() => { }} // Non-interactive in node view
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
+      </div>
       <div className="space-y-3 relative z-10">
         <div className="flex flex-col gap-1">
           <div className="flex items-center justify-between text-[10px] text-slate-500">
@@ -147,7 +151,9 @@ export const LogicNode = memo(({ data, selected }: any) => {
           <img src={resolveImageUrl(data.backgroundImage)} className="w-full h-full object-cover" alt="" />
         </div>
       )}
-      <div className="space-y-3 relative z-10">
+      <div
+        className={`space-y-3 relative z-10 transition-all duration-300 origin-top overflow-hidden ${data.isCollapsed ? 'max-h-0 opacity-0 pointer-events-none' : 'max-h-[500px] opacity-100'}`}
+      >
         {data.description && <div className="text-[10px] text-slate-400 italic mb-2">{data.description}</div>}
 
         {(!data.choices || data.choices.length === 0) && (
@@ -156,7 +162,7 @@ export const LogicNode = memo(({ data, selected }: any) => {
           </div>
         )}
 
-        {data.choices?.map((choice: any, idx: number) => (
+        {data.choices?.map((choice: any) => (
           <div key={choice.id} className="relative group/choice">
             <div className="bg-slate-950/50 border border-slate-700/50 p-2 rounded-lg text-[10px] flex items-center justify-between">
               <span className="font-bold text-amber-500 truncate max-w-[120px]" title={choice.text}>{choice.text}</span>
@@ -166,7 +172,6 @@ export const LogicNode = memo(({ data, selected }: any) => {
                 </span>
               )}
             </div>
-            {/* Dynamic Handle for this choice */}
             <Handle
               type="source"
               position={Position.Right}
@@ -177,7 +182,6 @@ export const LogicNode = memo(({ data, selected }: any) => {
           </div>
         ))}
 
-        {/* NEW BRANCH Creation Handle */}
         <div className="relative mt-2 p-2 border border-dashed border-slate-700/50 rounded-lg hover:border-amber-500/50 transition-colors group/new cursor-crosshair">
           <span className="text-[9px] font-bold text-slate-500 group-hover/new:text-amber-400 flex items-center gap-2 justify-center">
             <Plus size={10} /> NEW BRANCH

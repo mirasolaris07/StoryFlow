@@ -12,12 +12,16 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   MarkerType,
-  ReactFlowInstance
+  ReactFlowInstance,
+  SelectionMode,
+  useReactFlow
 } from 'reactflow';
 
 import { Sidebar } from './components/Sidebar';
+import { SecondarySidebar } from './components/SecondarySidebar';
 import { Inspector } from './components/Inspector';
 import { SceneEditor } from './components/SceneEditor';
+import { ScenarioEditor } from './components/ScenarioEditor';
 import { DialogueStyler } from './components/DialogueStyler';
 import { CharacterManager } from './components/CharacterManager';
 import { AttributeManager } from './components/AttributeManager';
@@ -28,7 +32,7 @@ import { GamePreview } from './components/GamePreview';
 import { VoiceManager } from './components/VoiceManager';
 import { INITIAL_CHARACTERS } from './constants';
 import { NodeType, NodeData, Character, AudioAsset, Attribute, EventType, ProjectRecord, DialogueBoxStyle } from './types';
-import { Play, Save, MessageSquare, Download, Upload, Trash2, FolderOpen, RefreshCw, Palette, Folder, Mic, Edit3 } from 'lucide-react';
+import { Play, Save, MessageSquare, Download, Upload, Trash2, FolderOpen, RefreshCw, Palette, Folder, Mic, Edit3, Focus, Sparkles, Search, Split, Sliders, Box, LayoutTemplate, Flag, Lock, Unlock, Plus, Minus, LayoutDashboard } from 'lucide-react';
 
 const nodeTypes = {
   START: StartNode,
@@ -51,6 +55,7 @@ export default function App() {
   const [showPreview, setShowPreview] = useState(false);
   const [previewStartNodeId, setPreviewStartNodeId] = useState<string | null>(null);
   const [isSceneEditorOpen, setIsSceneEditorOpen] = useState(false);
+  const [isScenarioEditorOpen, setIsScenarioEditorOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isBuilding, setIsBuilding] = useState(false);
   const [buildLogs, setBuildLogs] = useState<string[]>([]);
@@ -74,7 +79,12 @@ export default function App() {
 
   const [reactFlowInstance, setReactFlowInstance] = useState<ReactFlowInstance | null>(null);
   const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+  const [contextMenuSearch, setContextMenuSearch] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const [isMovementLocked, setIsMovementLocked] = useState(false);
+  const [activeSecondarySidebar, setActiveSecondarySidebar] = useState<'library' | 'publish' | null>(null);
+  const [highlightedEventId, setHighlightedEventId] = useState<string | null>(null);
 
   // Save Project Record
   const saveProject = useCallback(() => {
@@ -426,7 +436,6 @@ export default function App() {
       );
 
       // 2. Calculate Visibility
-      // We pass the edges from the outer scope
       const result = toggleBranchVisibility(nodeId, willBeExpanded, nodesWithSuperUpdated, edges);
 
       // We also need to update edges
@@ -469,6 +478,49 @@ export default function App() {
       </div>
     );
   }
+
+  // --- Logic Node Reordering ---
+  const reorderLogicChoices = useCallback((nodeId: string, currentNodes: Node[], currentEdges: Edge[]) => {
+    setNodes(nds => nds.map(node => {
+      if (node.id !== nodeId || node.type !== 'LOGIC') return node;
+      const data = node.data as NodeData;
+      if (!data.choices || data.choices.length === 0) return node;
+
+      // Filter edges starting from this logic node
+      const logicEdges = currentEdges.filter(e => e.source === nodeId);
+
+      // Create a map of choiceId -> targetNode Y position
+      const choiceTargetYMap: Record<string, number> = {};
+      logicEdges.forEach(edge => {
+        if (edge.sourceHandle) {
+          const targetNode = currentNodes.find(n => n.id === edge.target);
+          if (targetNode) {
+            choiceTargetYMap[edge.sourceHandle] = targetNode.position.y;
+          }
+        }
+      });
+
+      // Sort choices: 
+      // 1. Linked choices sorted by target Y
+      // 2. Unlinked choices put at the bottom
+      const sortedChoices = [...data.choices].sort((a, b) => {
+        const yA = choiceTargetYMap[a.id];
+        const yB = choiceTargetYMap[b.id];
+
+        if (yA !== undefined && yB !== undefined) return yA - yB;
+        if (yA !== undefined) return -1;
+        if (yB !== undefined) return 1;
+        return 0;
+      });
+
+      // Check if order actually changed
+      const orderChanged = sortedChoices.some((ch, idx) => ch.id !== data.choices[idx].id);
+      if (orderChanged) {
+        return { ...node, data: { ...node.data, choices: sortedChoices } };
+      }
+      return node;
+    }));
+  }, [setNodes]);
 
   // --- Logic Node Collapsing ---
   const handleToggleLogicCollapse = (nodeId: string) => {
@@ -526,6 +578,70 @@ export default function App() {
     }));
   };
 
+  // --- Auto Layout (BFS) ---
+  const handleAutoLayout = useCallback(() => {
+    if (nodes.length === 0) return;
+
+    // 1. Identify "Roots" (START nodes or nodes with no incoming edges)
+    const rootNodes = nodes.filter(n => n.type === 'START');
+    const actualRoots = rootNodes.length > 0 ? rootNodes : [nodes[0]];
+
+    const nodeLevels: Record<string, number> = {};
+    const queue: { id: string, level: number }[] = actualRoots.map(n => ({ id: n.id, level: 0 }));
+
+    while (queue.length > 0) {
+      const { id, level } = queue.shift()!;
+      if (nodeLevels[id] !== undefined && nodeLevels[id] >= level) continue;
+      nodeLevels[id] = level;
+
+      const outgoing = edges.filter(e => e.source === id);
+      outgoing.forEach(e => {
+        queue.push({ id: e.target, level: level + 1 });
+      });
+    }
+
+    // 2. Assign horizontal/vertical positions
+    const HORIZONTAL_SPACING = 400;
+    const VERTICAL_SPACING = 300;
+    const columnCounts: Record<number, number> = {};
+
+    setNodes(nds => nds.map(node => {
+      const level = nodeLevels[node.id] ?? 0;
+      const row = columnCounts[level] ?? 0;
+      columnCounts[level] = row + 1;
+
+      return {
+        ...node,
+        position: {
+          x: level * HORIZONTAL_SPACING,
+          y: row * VERTICAL_SPACING
+        }
+      };
+    }));
+
+    // 3. Fit View to show new layout
+    setTimeout(() => reactFlowInstance?.fitView({ padding: 0.5, duration: 800 }), 100);
+  }, [nodes, edges, reactFlowInstance, setNodes]);
+
+  // --- Voice Manager Sync ---
+  const handleJumpToLine = useCallback((nodeId: string, eventId: string) => {
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return;
+
+    // 1. Navigate to node
+    setSelectedNodeId(nodeId);
+    setActiveTab('scenes');
+    // setShowVoiceManager(false); // Removed: Keep open for mini-mode
+
+    // 2. Highlight event
+    setHighlightedEventId(eventId);
+    // Auto-clear highlight after 5 seconds
+    setTimeout(() => setHighlightedEventId(null), 5000);
+
+    // 3. Center canvas
+    reactFlowInstance?.setCenter(node.position.x + 100, node.position.y + 50, { zoom: 1.2, duration: 800 });
+  }, [nodes, reactFlowInstance]);
+
   return (
     <div className="flex h-screen w-full overflow-hidden bg-slate-950 font-inter">
       <Sidebar
@@ -538,9 +654,29 @@ export default function App() {
         onProjectNameChange={setProjectName}
         logs={buildLogs}
         onClearLogs={() => setBuildLogs([])}
+        activeSecondarySidebar={activeSecondarySidebar}
+        onToggleSecondarySidebar={(type) => setActiveSecondarySidebar(activeSecondarySidebar === type ? null : type)}
       />
 
-      <main className="flex-1 relative flex flex-col">
+      <SecondarySidebar
+        type={activeSecondarySidebar}
+        onClose={() => setActiveSecondarySidebar(null)}
+        onExport={handleExport}
+        onBuild={handleBuild}
+        onImport={() => fileInputRef.current?.click()}
+        onReset={() => {
+          if (confirm("This will permanently delete all nodes, characters, and settings. Continue?")) {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+          }
+        }}
+        isBuilding={isBuilding}
+      />
+
+      <main
+        className="flex-1 relative flex flex-col"
+        onClick={() => { if (activeSecondarySidebar) setActiveSecondarySidebar(null); }}
+      >
         {/* Hidden File Input for Import */}
         <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={handleImport} />
 
@@ -569,15 +705,15 @@ export default function App() {
                       const relevantEdges = deleted.filter(e => e.source === node.id);
                       if (relevantEdges.length > 0) {
                         const data = node.data as NodeData;
-                        // Filter OUT choices that lost their edge
-                        // This strictly enforces "No Edge = No Choice"
+                        // Only remove choice if we are SURE it was intentionally deleted
+                        // If multiple things are deleted at once, we should be careful
                         const newChoices = data.choices.filter(ch =>
-                          // Keep choice only if NO deleted edge was connected to its handle
-                          // STRICT CHECK: Only remove if the edge explicitly matches the choice ID.
-                          // We removed the catch-all for null handles to prevent accidental wipes.
                           !relevantEdges.some(e => e.sourceHandle === ch.id)
                         );
-                        return { ...node, data: { ...node.data, choices: newChoices } };
+                        // If choices were actually removed, update node
+                        if (newChoices.length !== data.choices.length) {
+                          return { ...node, data: { ...node.data, choices: newChoices } };
+                        }
                       }
                     }
                     return node;
@@ -622,6 +758,14 @@ export default function App() {
                       }
                       return node;
                     }));
+                  } // Closing the if block here as per instruction
+
+                  // Apply reorder immediately after connection
+                  if (sourceNode?.type === 'LOGIC') {
+                    // Wait a tiny bit for the edge state to update in ReactFlow
+                    setTimeout(() => {
+                      reorderLogicChoices(c.source, nodes, [...edges, { ...finalConnection, id: `e-${Date.now()}` } as Edge]);
+                    }, 50);
                   }
                 }}
                 onNodeClick={(_, node) => {
@@ -633,12 +777,85 @@ export default function App() {
                 onInit={setReactFlowInstance}
                 onDrop={onDrop}
                 onDragOver={(e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; }}
-                onContextMenu={(e) => { e.preventDefault(); setMenu({ x: e.clientX, y: e.clientY }); }}
+                onNodeDragStop={(_, node) => {
+                  // If we move a node, trigger reorder for any Logic nodes pointing TO it
+                  // or if WE are a logic node, reorder our branches
+                  const connectedLogicNodes = new Set<string>();
+                  edges.forEach(e => {
+                    if (e.target === node.id) {
+                      const src = nodes.find(n => n.id === e.source);
+                      if (src?.type === 'LOGIC') connectedLogicNodes.add(src.id);
+                    }
+                  });
+                  if (node.type === 'LOGIC') connectedLogicNodes.add(node.id);
+
+                  connectedLogicNodes.forEach(id => reorderLogicChoices(id, nodes, edges));
+                }}
+                onContextMenu={(e) => { e.preventDefault(); setContextMenuSearch(''); setMenu({ x: e.clientX, y: e.clientY }); }}
                 nodeTypes={nodeTypes}
+                deleteKeyCode={['Backspace', 'Delete']}
+                panOnDrag={!isMovementLocked ? [1] : false}
+                zoomOnScroll={!isMovementLocked}
+                zoomOnPinch={!isMovementLocked}
+                zoomOnDoubleClick={!isMovementLocked}
+                selectionOnDrag={true}
+                selectionMode={SelectionMode.Partial}
                 fitView
+                fitViewOptions={{ padding: 0.5 }}
+                minZoom={0.001}
+                maxZoom={4}
               >
                 <Background color="#1e293b" gap={24} variant={BackgroundVariant.Dots} />
-                <Controls />
+
+                {/* Custom Left Controls: Zoom & Lock */}
+                <Panel position="bottom-left" style={{ marginBottom: '20px', marginLeft: '10px' }}>
+                  <div className="flex flex-col gap-2 bg-slate-900/80 backdrop-blur-xl p-2 rounded-2xl border border-slate-800 shadow-2xl ring-1 ring-white/5">
+                    <button
+                      onClick={() => reactFlowInstance?.zoomIn()}
+                      className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all border border-slate-700 active:scale-95"
+                      title="Zoom In"
+                    >
+                      <Plus size={18} />
+                    </button>
+                    <button
+                      onClick={() => reactFlowInstance?.zoomOut()}
+                      className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all border border-slate-700 active:scale-95"
+                      title="Zoom Out"
+                    >
+                      <Minus size={18} />
+                    </button>
+                    <div className="h-px bg-slate-800 mx-1" />
+                    <button
+                      onClick={() => setIsMovementLocked(!isMovementLocked)}
+                      className={`p-3 rounded-xl transition-all border active:scale-95 ${isMovementLocked
+                        ? 'bg-amber-600/20 border-amber-500/50 text-amber-500 shadow-lg shadow-amber-900/20'
+                        : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
+                        }`}
+                      title={isMovementLocked ? "Unlock Movement" : "Lock Movement"}
+                    >
+                      {isMovementLocked ? <Lock size={18} /> : <Unlock size={18} />}
+                    </button>
+                    <div className="h-px bg-slate-800 mx-1" />
+                    <button
+                      onClick={handleAutoLayout}
+                      className="p-3 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-blue-400 rounded-xl transition-all border border-slate-700 active:scale-95 group"
+                      title="Auto Layout Canvas"
+                    >
+                      <LayoutDashboard size={18} className="group-hover:rotate-12 transition-transform" />
+                    </button>
+                  </div>
+                </Panel>
+
+                {/* Custom Right Control: Fit View */}
+                <Panel position="bottom-right" style={{ marginBottom: '20px', marginRight: '20px' }}>
+                  <button
+                    onClick={() => reactFlowInstance?.fitView({ padding: 0.5, duration: 800 })}
+                    className="w-16 h-16 bg-blue-600 hover:bg-blue-500 text-white rounded-full flex items-center justify-center transition-all shadow-2xl shadow-blue-900/40 active:scale-90 ring-4 ring-blue-400/20 group"
+                    title="Fit View"
+                  >
+                    <Focus size={28} className="group-hover:scale-110 transition-transform" />
+                  </button>
+                </Panel>
 
                 <Panel position="top-right">
                   <div className="flex items-center gap-2 bg-slate-900/80 backdrop-blur-xl p-2 rounded-2xl border border-slate-800 shadow-2xl ring-1 ring-white/5">
@@ -669,35 +886,88 @@ export default function App() {
                     <button onClick={handleManualSave} className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-4 py-2.5 rounded-xl font-black text-[10px] tracking-widest flex items-center gap-2 border border-slate-700 transition-all active:scale-95">
                       <Save size={16} className={isSaving ? 'animate-spin' : ''} /> {isSaving ? 'SAVING' : 'SAVE'}
                     </button>
+                    <button
+                      onClick={() => setIsScenarioEditorOpen(true)}
+                      className="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-black text-[10px] tracking-widest flex items-center gap-2 transition-all active:scale-95 shadow-lg shadow-indigo-900/40"
+                    >
+                      <Sparkles size={16} /> SCENARIO
+                    </button>
                   </div>
                 </Panel>
 
                 {menu && (
-                  <div className="fixed z-[100] bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-1 min-w-[180px] animate-in fade-in zoom-in duration-100" style={{ top: menu.y, left: menu.x }}>
-                    <div className="px-3 py-2 text-[9px] font-black text-slate-500 uppercase tracking-widest border-b border-slate-800 mb-1">Quick Add</div>
-                    <button onClick={() => addNodeAtPos(NodeType.SCENE, reactFlowInstance!.screenToFlowPosition({ x: menu.x, y: menu.y }))} className="w-full flex items-center gap-3 px-3 py-2 text-xs text-slate-300 hover:bg-blue-600 hover:text-white rounded-lg transition-colors">
-                      <MessageSquare size={14} className="text-blue-400" /> New Scene
-                    </button>
-                    <button onClick={() => addNodeAtPos(NodeType.LOGIC, reactFlowInstance!.screenToFlowPosition({ x: menu.x, y: menu.y }))} className="w-full flex items-center gap-3 px-3 py-2 text-xs text-slate-300 hover:bg-amber-600 hover:text-white rounded-lg transition-colors">
-                      <RefreshCw size={14} className="text-amber-400" /> New Logic
-                    </button>
-                    <button onClick={() => addNodeAtPos(NodeType.SUPER, reactFlowInstance!.screenToFlowPosition({ x: menu.x, y: menu.y }))} className="w-full flex items-center gap-3 px-3 py-2 text-xs text-slate-300 hover:bg-indigo-600 hover:text-white rounded-lg transition-colors">
-                      <Folder size={14} className="text-indigo-400" /> New Route Group
-                    </button>
+                  <div
+                    className="fixed z-[100] bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-2 min-w-[200px] animate-in fade-in zoom-in duration-100 flex flex-col gap-2"
+                    style={{ top: menu.y, left: menu.x }}
+                    onMouseDown={(e) => e.stopPropagation()} // Prevent ReactFlow pane click from closing it immediately if clicking inside
+                  >
+                    <div className="flex items-center gap-2 px-1 pb-1 border-b border-slate-800">
+                      <Search size={12} className="text-slate-500" />
+                      <input
+                        autoFocus
+                        type="text"
+                        placeholder="Search Nodes..."
+                        value={contextMenuSearch}
+                        onChange={(e) => setContextMenuSearch(e.target.value)}
+                        className="bg-transparent border-none outline-none text-[10px] text-slate-200 w-full font-bold"
+                      />
+                    </div>
+
+                    <div className="max-h-[300px] overflow-y-auto custom-scrollbar flex flex-col gap-1">
+                      {[
+                        { type: NodeType.SCENE, label: 'Scene Node', icon: <MessageSquare size={14} className="text-blue-400" /> },
+                        { type: NodeType.LOGIC, label: 'Logic Node', icon: <Split size={14} className="text-amber-400" /> },
+                        { type: NodeType.SETTER, label: 'Setter Node', icon: <Sliders size={14} className="text-cyan-400" /> },
+                        { type: NodeType.SUPER, label: 'Route Group', icon: <Box size={14} className="text-indigo-400" /> },
+                        { type: NodeType.START, label: 'Start Point', icon: <Play size={14} className="text-emerald-400" /> },
+                        { type: NodeType.MENU, label: 'Main Menu', icon: <LayoutTemplate size={14} className="text-indigo-400" /> },
+                        { type: NodeType.END, label: 'End Point', icon: <Flag size={14} className="text-rose-400" /> },
+                      ]
+                        .filter(n => n.label.toLowerCase().includes(contextMenuSearch.toLowerCase()))
+                        .map((n) => (
+                          <button
+                            key={n.type}
+                            onClick={() => {
+                              addNodeAtPos(n.type, reactFlowInstance!.screenToFlowPosition({ x: menu.x, y: menu.y }));
+                              setMenu(null);
+                              setContextMenuSearch('');
+                            }}
+                            className="w-full flex items-center gap-3 px-3 py-2 text-xs text-slate-300 hover:bg-slate-800 hover:text-white rounded-lg transition-colors text-left"
+                          >
+                            {n.icon}
+                            <span className="font-bold">{n.label}</span>
+                          </button>
+                        ))}
+
+                      {contextMenuSearch && ![
+                        { type: NodeType.SCENE, label: 'Scene Node', icon: <MessageSquare size={14} className="text-blue-400" /> },
+                        { type: NodeType.LOGIC, label: 'Logic Node', icon: <Split size={14} className="text-amber-400" /> },
+                        { type: NodeType.SETTER, label: 'Setter Node', icon: <Sliders size={14} className="text-cyan-400" /> },
+                        { type: NodeType.SUPER, label: 'Route Group', icon: <Box size={14} className="text-indigo-400" /> },
+                        { type: NodeType.START, label: 'Start Point', icon: <Play size={14} className="text-emerald-400" /> },
+                        { type: NodeType.MENU, label: 'Main Menu', icon: <LayoutTemplate size={14} className="text-indigo-400" /> },
+                        { type: NodeType.END, label: 'End Point', icon: <Flag size={14} className="text-rose-400" /> },
+                      ].some(n => n.label.toLowerCase().includes(contextMenuSearch.toLowerCase())) && (
+                          <div className="px-3 py-4 text-center text-[10px] text-slate-500 italic">No nodes matching "{contextMenuSearch}"</div>
+                        )}
+                    </div>
                   </div>
                 )}
               </ReactFlow>
             </div>
-            <Inspector
-              selectedNode={selectedNode}
-              nodes={nodes}
-              characters={characters}
-              gameAttributes={gameAttributes}
-              audioAssets={audioAssets}
-              onUpdate={updateNodeData}
-              onDeselect={() => setSelectedNodeId(null)}
-              onOpenSceneEditor={() => setIsSceneEditorOpen(true)}
-            />
+            {selectedNode && (
+              <Inspector
+                selectedNode={selectedNode}
+                nodes={nodes}
+                characters={characters}
+                gameAttributes={gameAttributes}
+                audioAssets={audioAssets}
+                highlightedEventId={highlightedEventId}
+                onUpdate={updateNodeData}
+                onDeselect={() => setSelectedNodeId(null)}
+                onOpenSceneEditor={() => setIsSceneEditorOpen(true)}
+              />
+            )}
           </div>
         ) : activeTab === 'characters' ? (
           <CharacterManager characters={characters} onUpdate={setCharacters} />
@@ -705,69 +975,64 @@ export default function App() {
           <AttributeManager attributes={gameAttributes} onUpdate={setGameAttributes} />
         ) : activeTab === 'audio' ? (
           <AudioManager assets={audioAssets} onUpdate={setAudioAssets} />
-        ) : (
-          <div className="flex-1 flex flex-col items-center justify-center p-10 bg-slate-950">
-            <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-[40px] p-12 text-center space-y-8 shadow-2xl">
-              <div className="w-24 h-24 bg-blue-600/10 rounded-full flex items-center justify-center text-blue-500 mx-auto">
-                <FolderOpen size={48} />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-2xl font-black text-white tracking-tight">Project Records</h2>
-                <p className="text-sm text-slate-500 leading-relaxed">Manage your story architecture. Records include characters, scenes, variables, and logic flow.</p>
-              </div>
-              <div className="grid grid-cols-1 gap-3">
-                <button onClick={handleExport} className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl flex items-center justify-center gap-3 font-bold text-sm transition-all border border-slate-700">
-                  <Download size={18} /> Export (.json)
-                </button>
-                <button onClick={() => fileInputRef.current?.click()} className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl flex items-center justify-center gap-3 font-bold text-sm transition-all shadow-xl shadow-blue-900/20">
-                  <Upload size={18} /> Import Record
-                </button>
-                <button
-                  onClick={() => { if (confirm("Reset everything?")) { localStorage.removeItem(STORAGE_KEY); location.reload(); } }}
-                  className="w-full py-4 text-slate-500 hover:text-rose-500 hover:bg-rose-500/5 rounded-2xl flex items-center justify-center gap-3 font-bold text-xs transition-all"
-                >
-                  <Trash2 size={16} /> Reset All Data
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </main>
+        ) : null
+        }
+      </main >
 
       {showPreview && <GamePreview nodes={nodes} edges={edges} characters={characters} audioAssets={audioAssets} gameAttributes={gameAttributes} dialogueStyle={dialogueStyle} initialNodeId={previewStartNodeId} narratorVoice={narratorVoice} onClose={() => setShowPreview(false)} />}
 
-      {isSceneEditorOpen && selectedNode && (
-        <SceneEditor
-          data={selectedNode.data as NodeData}
-          characters={characters}
-          onUpdateEvent={(eventId, updates) => {
-            const data = selectedNode.data as NodeData;
-            const newEvents = data.events.map(e => e.id === eventId ? { ...e, ...updates } : e);
-            updateNodeData(selectedNode.id, { events: newEvents });
-          }}
-          onClose={() => setIsSceneEditorOpen(false)}
-        />
-      )}
+      {
+        isSceneEditorOpen && selectedNode && (
+          <SceneEditor
+            data={selectedNode.data as NodeData}
+            characters={characters}
+            onUpdateEvent={(eventId, updates) => {
+              const data = selectedNode.data as NodeData;
+              const newEvents = data.events.map(e => e.id === eventId ? { ...e, ...updates } : e);
+              updateNodeData(selectedNode.id, { events: newEvents });
+            }}
+            onClose={() => setIsSceneEditorOpen(false)}
+          />
+        )
+      }
 
-      {showStyleEditor && (
-        <DialogueStyler
-          style={dialogueStyle}
-          onUpdate={setDialogueStyle}
-          onClose={() => setShowStyleEditor(false)}
-        />
-      )}
+      {
+        isScenarioEditorOpen && (
+          <ScenarioEditor
+            nodes={nodes}
+            edges={edges}
+            selectedNodeIds={nodes.filter(n => n.selected).map(n => n.id)}
+            characters={characters}
+            onUpdateNode={updateNodeData}
+            onClose={() => setIsScenarioEditorOpen(false)}
+          />
+        )
+      }
 
-      {showVoiceManager && (
-        <VoiceManager
-          nodes={nodes}
-          characters={characters}
-          narratorVoice={narratorVoice}
-          onUpdateNarratorVoice={setNarratorVoice}
-          onUpdateCharacter={updateCharacter}
-          onUpdateNode={updateNodeData}
-          onClose={() => setShowVoiceManager(false)}
-        />
-      )}
-    </div>
+      {
+        showStyleEditor && (
+          <DialogueStyler
+            style={dialogueStyle}
+            onUpdate={setDialogueStyle}
+            onClose={() => setShowStyleEditor(false)}
+          />
+        )
+      }
+
+      {
+        showVoiceManager && (
+          <VoiceManager
+            nodes={nodes}
+            characters={characters}
+            narratorVoice={narratorVoice}
+            onUpdateNarratorVoice={setNarratorVoice}
+            onUpdateCharacter={updateCharacter}
+            onUpdateNode={updateNodeData}
+            onJumpToLine={handleJumpToLine}
+            onClose={() => setShowVoiceManager(false)}
+          />
+        )
+      }
+    </div >
   );
 }

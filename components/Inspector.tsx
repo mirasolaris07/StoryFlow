@@ -15,12 +15,13 @@ interface InspectorProps {
   characters: Character[];
   gameAttributes: Attribute[];
   audioAssets: AudioAsset[];
+  highlightedEventId?: string | null;
   onUpdate: (id: string, data: Partial<NodeData>) => void;
   onDeselect?: () => void;
   onOpenSceneEditor?: () => void;
 }
 
-export const Inspector: React.FC<InspectorProps> = ({ selectedNode, nodes, characters, gameAttributes, audioAssets, onUpdate, onDeselect, onOpenSceneEditor }) => {
+export const Inspector: React.FC<InspectorProps> = ({ selectedNode, nodes, characters, gameAttributes, audioAssets, highlightedEventId, onUpdate, onDeselect, onOpenSceneEditor }) => {
   const bgInputRef = useRef<HTMLInputElement>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -123,14 +124,6 @@ export const Inspector: React.FC<InspectorProps> = ({ selectedNode, nodes, chara
                 onChange={e => onUpdate(selectedNode.id, { title: e.target.value })}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-white focus:ring-1 focus:ring-blue-500 outline-none transition-all font-bold"
               />
-              {selectedNode.type === 'LOGIC' && (
-                <textarea
-                  value={data.description || ''}
-                  onChange={e => onUpdate(selectedNode.id, { description: e.target.value })}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-400 focus:ring-1 focus:ring-amber-500 outline-none transition-all min-h-[60px]"
-                  placeholder="Describe decision logic (e.g. 'Check if player has sword')..."
-                />
-              )}
               {selectedNode.type === 'LOGIC' && (
                 <textarea
                   value={data.description || ''}
@@ -249,8 +242,16 @@ export const Inspector: React.FC<InspectorProps> = ({ selectedNode, nodes, chara
                       (event.type === EventType.MUSIC_CHANGE && event.audioAssetId && event.audioAssetId !== 'STOP' && !audioAssets.find(a => a.id === event.audioAssetId));
 
                     return (
-                      <div key={event.id} className={`bg-slate-950/50 border rounded-2xl p-5 space-y-4 relative group transition-all ${isMissingAsset ? 'border-red-500 ring-2 ring-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]' : 'border-slate-800 hover:border-slate-700'
-                        }`}>
+                      <div
+                        key={event.id}
+                        id={`event-${event.id}`}
+                        className={`bg-slate-950/50 border rounded-2xl p-5 space-y-4 relative group transition-all duration-500 ${highlightedEventId === event.id
+                            ? 'border-blue-500 ring-4 ring-blue-500/20 shadow-[0_0_30px_rgba(59,130,246,0.4)] scale-[1.02] bg-blue-950/20'
+                            : isMissingAsset
+                              ? 'border-red-500 ring-2 ring-red-500/20 shadow-[0_0_20px_rgba(239,68,68,0.2)]'
+                              : 'border-slate-800 hover:border-slate-700'
+                          }`}
+                      >
                         <div className="absolute -left-2 top-6 w-5 h-5 bg-slate-800 rounded-full border border-slate-700 flex items-center justify-center text-[9px] text-slate-300 font-black">{idx + 1}</div>
                         <div className="flex items-center gap-3">
                           {/* Character/Type Preview */}

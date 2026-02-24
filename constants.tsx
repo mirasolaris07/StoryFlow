@@ -39,5 +39,4 @@ export const MENU_ITEMS = [
   { id: 'characters', label: 'Cast', icon: <Users size={18} /> },
   { id: 'attributes', label: 'Variables', icon: <Terminal size={18} /> },
   { id: 'audio', label: 'Sound', icon: <Music size={18} /> },
-  { id: 'project', label: 'Project', icon: <FolderOpen size={18} /> },
 ];
