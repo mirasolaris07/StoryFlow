@@ -108,6 +108,15 @@ export interface NodeData {
   // Super Node Props
   isExpanded?: boolean;
   onToggleExpand?: () => void;
+  // AI Branching
+  variants?: ScenarioVariant[];
+}
+
+export interface ScenarioVariant {
+  id: string;
+  name: string;
+  description?: string;
+  nodeChanges: Record<string, SceneEvent[]>; // Mapping nodeId to proposed events
 }
 
 export interface GameState {

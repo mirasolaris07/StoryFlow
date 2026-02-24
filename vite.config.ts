@@ -9,6 +9,9 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: '0.0.0.0',
+      hmr: {
+        clientPort: 3001,
+      },
       proxy: {
         '/api': {
           target: 'http://127.0.0.1:8000',

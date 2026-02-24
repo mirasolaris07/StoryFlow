@@ -318,8 +318,27 @@ export default function App() {
     reader.readAsText(file);
   };
 
-  const updateNodeData = useCallback((id: string, data: Partial<NodeData>) => {
-    setNodes((nds) => nds.map((node) => node.id === id ? { ...node, data: { ...node.data, ...data } } : node));
+  const updateNodeData = useCallback((nodeId: string, newData: Partial<NodeData>) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === nodeId) {
+          return { ...node, data: { ...node.data, ...newData } };
+        }
+        return node;
+      })
+    );
+  }, [setNodes]);
+
+  const onBatchUpdateNodes = useCallback((updates: Record<string, Partial<NodeData>>) => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        const update = updates[node.id];
+        if (update) {
+          return { ...node, data: { ...node.data, ...update } };
+        }
+        return node;
+      })
+    );
   }, [setNodes]);
 
   const updateCharacter = useCallback((id: string, updates: Partial<Character>) => {
@@ -1004,6 +1023,7 @@ export default function App() {
             selectedNodeIds={nodes.filter(n => n.selected).map(n => n.id)}
             characters={characters}
             onUpdateNode={updateNodeData}
+            onBatchUpdateNodes={onBatchUpdateNodes}
             onClose={() => setIsScenarioEditorOpen(false)}
           />
         )
